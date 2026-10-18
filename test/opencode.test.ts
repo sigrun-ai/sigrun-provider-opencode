@@ -23,8 +23,10 @@ import type {
 import sigrunOpencode, {
 	createOpencodePlugin,
 	OPENCODE_API_KEY_ENV,
+	OPENCODE_BASE_URL,
 	OPENCODE_PROVIDER_ID,
 	parseOpencodeCatalog,
+	resolveOpencodeBaseUrl,
 	type SigrunPluginHost,
 } from "../src/index.js";
 
@@ -113,9 +115,23 @@ function models(
 	return models;
 }
 
+/** The seam-host slice, scoped to whatever settings the test wants. */
+function host(settings: Record<string, unknown> = {}): SigrunPluginHost {
+	return {
+		stores: {
+			settings: {
+				get: async () => settings,
+				set: async () => {
+					throw new Error("unexpected settings write in tests");
+				},
+			},
+		},
+	};
+}
+
 describe("the factory contract", () => {
-	it("returns a provider-only contributor with an empty baseline catalog", () => {
-		const result = sigrunOpencode(undefined as unknown as SigrunPluginHost);
+	it("returns a provider-only contributor with an empty baseline catalog", async () => {
+		const result = await sigrunOpencode(host());
 		expect(result.name).toBe("sigrun-opencode");
 		// Provider-only: no extension field (the loader's Task 1 pathway).
 		expect("extension" in result).toBe(false);
@@ -131,6 +147,42 @@ describe("the factory contract", () => {
 		// Arity 1: the host-taking signature (the loader's factory.length
 		// gate passes the seam host only to factories that declare it).
 		expect(sigrunOpencode.length).toBe(1);
+	});
+});
+
+describe("the scoped-settings base URL", () => {
+	it("overrides the constant end to end (trimmed), absent settings fall back", async () => {
+		serveCatalog();
+		// Whitespace around the URL proves the trim.
+		const result = await sigrunOpencode(host({ baseUrl: `  ${baseUrl}  ` }));
+		const store = createModels({
+			credentials: credentialStore("bridged-key"),
+			authContext: authContext({}),
+		});
+		store.setProvider(result.providers[0]!.provider);
+		const refresh = await store.refresh({ force: true });
+		expect(refresh.errors.size).toBe(0);
+		// The override drove the fixture server, and the catalog is
+		// stamped with the (trimmed) overridden base.
+		expect(requests).toHaveLength(1);
+		expect(requests[0]!.path).toBe("/v1/models");
+		const catalog = store.getModels(OPENCODE_PROVIDER_ID);
+		expect(catalog.map((model) => model.id)).toEqual([
+			"acme-mini",
+			"acme-large",
+		]);
+		expect(catalog.every((model) => model.baseUrl === baseUrl)).toBe(true);
+	});
+
+	it("resolves: absent → constant, valid → trimmed, malformed → throws", () => {
+		expect(resolveOpencodeBaseUrl({})).toBe(OPENCODE_BASE_URL);
+		expect(resolveOpencodeBaseUrl({ other: true })).toBe(OPENCODE_BASE_URL);
+		expect(resolveOpencodeBaseUrl({ baseUrl: `  ${baseUrl} ` })).toBe(baseUrl);
+		expect(() => resolveOpencodeBaseUrl({ baseUrl: "" })).toThrow(/baseUrl/);
+		expect(() => resolveOpencodeBaseUrl({ baseUrl: "   " })).toThrow(/baseUrl/);
+		expect(() => resolveOpencodeBaseUrl({ baseUrl: 42 })).toThrow(/baseUrl/);
+		// A malformed override quarantines the factory loudly rather than
+		// silently falling back to the constant.
 	});
 });
 

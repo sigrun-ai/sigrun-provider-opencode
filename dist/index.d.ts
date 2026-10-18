@@ -25,7 +25,11 @@ import { type Provider } from "@earendil-works/pi-ai/models";
 import type { Model } from "@earendil-works/pi-ai";
 /** The provider id models are registered (and stamped) under. */
 export declare const OPENCODE_PROVIDER_ID = "opencode";
-/** OpenCode's paid Go tier (OpenAI-compatible endpoint). */
+/**
+ * OpenCode's paid Go tier (OpenAI-compatible endpoint). The operator can
+ * override per deployment via the plugin's scoped settings (`baseUrl`) —
+ * see {@link resolveOpencodeBaseUrl}.
+ */
 export declare const OPENCODE_BASE_URL = "https://opencode.ai/zen/go/v1";
 /** Ambient fallback when auth.json holds no credential. */
 export declare const OPENCODE_API_KEY_ENV = "OPENCODE_GO_API_KEY";
@@ -91,10 +95,22 @@ export interface OpencodePlugin {
  */
 export declare function createOpencodePlugin(baseUrl?: string): OpencodePlugin;
 /**
+ * Resolve the plugin's base URL from its scoped settings: `baseUrl`
+ * (string) overrides the {@link OPENCODE_BASE_URL} constant. Absent → the
+ * constant; present-but-not-a-non-empty-string → throw (a malformed
+ * override must quarantine loudly, not silently fall back to a possibly
+ * wrong constant).
+ */
+export declare function resolveOpencodeBaseUrl(settings: Record<string, unknown>): string;
+/**
  * The sigrun extension-package factory (provider-only contributor).
  * Arity 1 declares the host-taking signature — sigrun's loader passes the
- * seam host only to factories that declare one (`factory.length > 0`).
- * sigrun-opencode reads no scoped settings (fixed endpoint, ambient-keyed
- * auth), so the host is accepted for the reference shape and left unused.
+ * seam host only to factories that declare one (`factory.length > 0`) —
+ * and the factory is ASYNC because the scoped settings store is
+ * async-only; sigrun's loader awaits factory results. The base URL is
+ * deployment-configurable through the scoped settings (`baseUrl` in
+ * `settings/sigrun-opencode.json`, constant fallback): deployments behind
+ * a proxy or mirror — and hermetic test fixtures — redirect the endpoint
+ * that way (restart-required, exactly like sigrun-pareto/sigrun-bifrost).
  */
-export default function sigrunOpencode(host: SigrunPluginHost): ProviderPluginResult;
+export default function sigrunOpencode(host: SigrunPluginHost): Promise<ProviderPluginResult>;

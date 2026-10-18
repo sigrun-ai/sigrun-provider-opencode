@@ -28,7 +28,11 @@ import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completio
 
 /** The provider id models are registered (and stamped) under. */
 export const OPENCODE_PROVIDER_ID = "opencode";
-/** OpenCode's paid Go tier (OpenAI-compatible endpoint). */
+/**
+ * OpenCode's paid Go tier (OpenAI-compatible endpoint). The operator can
+ * override per deployment via the plugin's scoped settings (`baseUrl`) —
+ * see {@link resolveOpencodeBaseUrl}.
+ */
 export const OPENCODE_BASE_URL = "https://opencode.ai/zen/go/v1";
 /** Ambient fallback when auth.json holds no credential. */
 export const OPENCODE_API_KEY_ENV = "OPENCODE_GO_API_KEY";
@@ -286,16 +290,41 @@ export function createOpencodePlugin(
 }
 
 /**
+ * Resolve the plugin's base URL from its scoped settings: `baseUrl`
+ * (string) overrides the {@link OPENCODE_BASE_URL} constant. Absent → the
+ * constant; present-but-not-a-non-empty-string → throw (a malformed
+ * override must quarantine loudly, not silently fall back to a possibly
+ * wrong constant).
+ */
+export function resolveOpencodeBaseUrl(
+	settings: Record<string, unknown>,
+): string {
+	if (!("baseUrl" in settings)) return OPENCODE_BASE_URL;
+	const value = settings.baseUrl;
+	if (typeof value !== "string" || value.trim().length === 0) {
+		throw new Error(
+			"sigrun-opencode: settings/sigrun-opencode.json baseUrl must be a non-empty string when present",
+		);
+	}
+	return value.trim();
+}
+
+/**
  * The sigrun extension-package factory (provider-only contributor).
  * Arity 1 declares the host-taking signature — sigrun's loader passes the
- * seam host only to factories that declare one (`factory.length > 0`).
- * sigrun-opencode reads no scoped settings (fixed endpoint, ambient-keyed
- * auth), so the host is accepted for the reference shape and left unused.
+ * seam host only to factories that declare one (`factory.length > 0`) —
+ * and the factory is ASYNC because the scoped settings store is
+ * async-only; sigrun's loader awaits factory results. The base URL is
+ * deployment-configurable through the scoped settings (`baseUrl` in
+ * `settings/sigrun-opencode.json`, constant fallback): deployments behind
+ * a proxy or mirror — and hermetic test fixtures — redirect the endpoint
+ * that way (restart-required, exactly like sigrun-pareto/sigrun-bifrost).
  */
-export default function sigrunOpencode(
+export default async function sigrunOpencode(
 	host: SigrunPluginHost,
-): ProviderPluginResult {
-	const plugin = createOpencodePlugin();
+): Promise<ProviderPluginResult> {
+	const settings = await host.stores.settings.get();
+	const plugin = createOpencodePlugin(resolveOpencodeBaseUrl(settings));
 	return {
 		name: "sigrun-opencode",
 		providers: [{ provider: plugin.provider, readiness: plugin.readiness }],
