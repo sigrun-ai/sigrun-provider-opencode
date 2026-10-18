@@ -1,0 +1,78 @@
+# sigrun-opencode
+
+A [sigrun](https://github.com/sigrun-ai) provider plugin:
+[OpenCode](https://opencode.ai)'s **paid Go tier**
+(`https://opencode.ai/zen/go/v1`, OpenAI-compatible) as one dynamic chat
+provider. The `/zen/v1` free tier is client-gated by design (FreeTierError
+for non-CLI requests) and is out of scope.
+
+## What it contributes
+
+A **provider-only contributor** — the default export is a factory
+returning `{ name: "sigrun-opencode", providers: [{ provider, readiness }],
+health }` with no pi-durable extension surface. Sigrun's loader merges
+the provider into its `Models` store at boot.
+
+- **Provider** `opencode` — dynamic catalog fetched from
+  `<base>/models` (OpenAI `[OI]` list shape; entries carry
+  `id`/`object`/`created`/`owned_by` and no capability metadata) over
+  `openai-completions`; boots with an empty baseline and publishes the
+  fetched catalog.
+- **Readiness** (`not_configured` / `degraded` / `ready`, surfaced on
+  sigrun's `/v1/auth/check`) — seeded from credential resolution and
+  updated per refresh outcome; state transitions log via `console.warn`
+  (transitions only, never per failure). On the first configured boot
+  the provider announces `startup → ready` at credential *resolution* —
+  before any refresh has run (`ready` there means "credential resolved,
+  refresh not yet attempted", not "catalog verified").
+- **Health** — `degraded` only when the provider is configured and its
+  last refresh failed; an unconfigured optional plugin reports `ok`.
+
+## Credentials
+
+Resolved per request through sigrun's auth.json bridge, falling back to
+the ambient environment:
+
+1. the bridged auth.json credential (`"default"` entry, then the
+   `"opencode"` entry), then
+2. `OPENCODE_GO_API_KEY`.
+
+The plugin never reads auth.json or `process.env` itself. Rotating the
+key applies on the next resolution — no restart needed (there are no
+plugin settings; the endpoint is fixed).
+
+## Failure semantics
+
+`fetchModels` **throws** when unconfigured or when the catalog fetch
+fails — it never returns an empty array, which pi-ai would publish and
+persist, wiping the catalog. A failed refresh retains the previous
+catalog and records a per-provider error.
+
+## Install
+
+```jsonc
+// settings.json (sigrun config dir) — the UNIFIED extensions list:
+// install + load in one place; npm and git specifiers are the same list
+// ("sigrun-opencode@range", "git:github.com/sigrun-ai/sigrun-opencode",
+// an https git URL with an optional @ref, or this file: form).
+{
+	"extensions": ["file:/path/to/sigrun-opencode"]
+}
+```
+
+The committed `dist/` is the load target for git installs; pi-ai and
+pi-durable are devDependencies (build-time) — sigrun ships them at
+runtime.
+
+## Development
+
+```sh
+npm install        # also builds dist/ via prepare
+npm test           # vitest — hermetic fixture HTTP server, no network
+npm run typecheck
+npm run build
+```
+
+## License
+
+MIT
