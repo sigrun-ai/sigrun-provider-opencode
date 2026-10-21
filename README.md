@@ -53,16 +53,17 @@ catalog and records a per-provider error.
 ```jsonc
 // settings.json (sigrun config dir) — the UNIFIED extensions list:
 // install + load in one place; npm and git specifiers are the same list
-// ("sigrun-opencode@range", "git:github.com/sigrun-ai/sigrun-opencode",
-// an https git URL with an optional @ref, or this file: form).
+// npm ("@sigrun/provider-opencode@^0.1.0"), git
+// ("git:github.com/sigrun-ai/sigrun-provider-opencode", or any
+// https git URL with an optional @ref), or the file: form below.
 {
 	"extensions": ["file:/path/to/sigrun-opencode"]
 }
 ```
 
 The committed `dist/` is the load target for git installs; pi-ai and
-pi-durable are devDependencies (build-time) — sigrun ships them at
-runtime.
+pi-durable are peerDependencies (sigrun supplies them at runtime);
+they are mirrored in devDependencies for this repo's own build and tests.
 
 ## Development
 
