@@ -1,5 +1,5 @@
 /**
- * sigrun-opencode — a sigrun provider plugin (provider plugins Task 8):
+ * @sigrun/provider-opencode — a sigrun provider plugin (provider plugins Task 8):
  * OpenCode's PAID Go tier (`https://opencode.ai/zen/go/v1`) as one
  * dynamic OpenAI-compatible provider. The `/zen/v1` free tier is
  * client-gated by design (FreeTierError for non-CLI requests) and is out
@@ -109,7 +109,7 @@ export declare function resolveOpencodeBaseUrl(settings: Record<string, unknown>
  * and the factory is ASYNC because the scoped settings store is
  * async-only; sigrun's loader awaits factory results. The base URL is
  * deployment-configurable through the scoped settings (`baseUrl` in
- * `settings/sigrun-opencode.json`, constant fallback): deployments behind
+ * `settings/provider-opencode.json`, constant fallback): deployments behind
  * a proxy or mirror — and hermetic test fixtures — redirect the endpoint
  * that way (restart-required, exactly like sigrun-pareto/sigrun-bifrost).
  */

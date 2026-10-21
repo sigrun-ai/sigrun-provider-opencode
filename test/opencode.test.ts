@@ -132,7 +132,7 @@ function host(settings: Record<string, unknown> = {}): SigrunPluginHost {
 describe("the factory contract", () => {
 	it("returns a provider-only contributor with an empty baseline catalog", async () => {
 		const result = await sigrunOpencode(host());
-		expect(result.name).toBe("sigrun-opencode");
+		expect(result.name).toBe("provider-opencode");
 		// Provider-only: no extension field (the loader's Task 1 pathway).
 		expect("extension" in result).toBe(false);
 		expect(result.providers).toHaveLength(1);

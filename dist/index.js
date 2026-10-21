@@ -1,5 +1,5 @@
 /**
- * sigrun-opencode — a sigrun provider plugin (provider plugins Task 8):
+ * @sigrun/provider-opencode — a sigrun provider plugin (provider plugins Task 8):
  * OpenCode's PAID Go tier (`https://opencode.ai/zen/go/v1`) as one
  * dynamic OpenAI-compatible provider. The `/zen/v1` free tier is
  * client-gated by design (FreeTierError for non-CLI requests) and is out
@@ -108,7 +108,7 @@ export function createOpencodePlugin(baseUrl = OPENCODE_BASE_URL) {
         const next = status();
         if (next === lastAnnounced)
             return;
-        console.warn(`sigrun-opencode: opencode ${lastAnnounced ?? "startup"} → ${next}` +
+        console.warn(`provider-opencode: opencode ${lastAnnounced ?? "startup"} → ${next}` +
             (lastRefreshDetail !== undefined && next === "degraded"
                 ? ` (${lastRefreshDetail})`
                 : ""));
@@ -166,7 +166,7 @@ export function createOpencodePlugin(baseUrl = OPENCODE_BASE_URL) {
                 // NEVER return [] — the createProvider wrapper publishes +
                 // persists whatever fetchModels returns; an empty array
                 // would wipe the catalog.
-                throw new Error(`sigrun-opencode: OpenCode Go is not configured ` +
+                throw new Error(`provider-opencode: OpenCode Go is not configured ` +
                     `(no auth.json credential and no ${OPENCODE_API_KEY_ENV}); ` +
                     "refusing to publish an empty catalog");
             }
@@ -193,7 +193,7 @@ export function createOpencodePlugin(baseUrl = OPENCODE_BASE_URL) {
                     throw cause;
                 const message = cause instanceof Error ? cause.message : String(cause);
                 noteRefresh(false, message);
-                throw new Error(`sigrun-opencode: OpenCode Go catalog refresh failed: ${message}`);
+                throw new Error(`provider-opencode: OpenCode Go catalog refresh failed: ${message}`);
             }
         },
         api: openAICompletionsApi(),
@@ -223,7 +223,7 @@ export function resolveOpencodeBaseUrl(settings) {
         return OPENCODE_BASE_URL;
     const value = settings.baseUrl;
     if (typeof value !== "string" || value.trim().length === 0) {
-        throw new Error("sigrun-opencode: settings/sigrun-opencode.json baseUrl must be a non-empty string when present");
+        throw new Error("provider-opencode: settings/provider-opencode.json baseUrl must be a non-empty string when present");
     }
     return value.trim();
 }
@@ -234,7 +234,7 @@ export function resolveOpencodeBaseUrl(settings) {
  * and the factory is ASYNC because the scoped settings store is
  * async-only; sigrun's loader awaits factory results. The base URL is
  * deployment-configurable through the scoped settings (`baseUrl` in
- * `settings/sigrun-opencode.json`, constant fallback): deployments behind
+ * `settings/provider-opencode.json`, constant fallback): deployments behind
  * a proxy or mirror — and hermetic test fixtures — redirect the endpoint
  * that way (restart-required, exactly like sigrun-pareto/sigrun-bifrost).
  */
@@ -242,7 +242,7 @@ export default async function sigrunOpencode(host) {
     const settings = await host.stores.settings.get();
     const plugin = createOpencodePlugin(resolveOpencodeBaseUrl(settings));
     return {
-        name: "sigrun-opencode",
+        name: "provider-opencode",
         providers: [{ provider: plugin.provider, readiness: plugin.readiness }],
         health: plugin.health,
     };

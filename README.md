@@ -1,4 +1,4 @@
-# sigrun-opencode
+# @sigrun/provider-opencode
 
 A [sigrun](https://github.com/sigrun-ai) provider plugin:
 [OpenCode](https://opencode.ai)'s **paid Go tier**
@@ -9,7 +9,7 @@ for non-CLI requests) and is out of scope.
 ## What it contributes
 
 A **provider-only contributor** — the default export is a factory
-returning `{ name: "sigrun-opencode", providers: [{ provider, readiness }],
+returning `{ name: "provider-opencode", providers: [{ provider, readiness }],
 health }` with no pi-durable extension surface. Sigrun's loader merges
 the provider into its `Models` store at boot.
 
@@ -53,16 +53,17 @@ catalog and records a per-provider error.
 ```jsonc
 // settings.json (sigrun config dir) — the UNIFIED extensions list:
 // install + load in one place; npm and git specifiers are the same list
-// ("sigrun-opencode@range", "git:github.com/sigrun-ai/sigrun-opencode",
-// an https git URL with an optional @ref, or this file: form).
+// npm ("@sigrun/provider-opencode@^0.1.0"), git
+// ("git:github.com/sigrun-ai/sigrun-provider-opencode", or any
+// https git URL with an optional @ref), or the file: form below.
 {
 	"extensions": ["file:/path/to/sigrun-opencode"]
 }
 ```
 
 The committed `dist/` is the load target for git installs; pi-ai and
-pi-durable are devDependencies (build-time) — sigrun ships them at
-runtime.
+pi-durable are peerDependencies (sigrun supplies them at runtime);
+they are mirrored in devDependencies for this repo's own build and tests.
 
 ## Development
 
