@@ -1,4 +1,4 @@
-# sigrun-opencode
+# @sigrun/provider-opencode
 
 A [sigrun](https://github.com/sigrun-ai) provider plugin:
 [OpenCode](https://opencode.ai)'s **paid Go tier**
@@ -9,7 +9,7 @@ for non-CLI requests) and is out of scope.
 ## What it contributes
 
 A **provider-only contributor** — the default export is a factory
-returning `{ name: "sigrun-opencode", providers: [{ provider, readiness }],
+returning `{ name: "provider-opencode", providers: [{ provider, readiness }],
 health }` with no pi-durable extension surface. Sigrun's loader merges
 the provider into its `Models` store at boot.
 
