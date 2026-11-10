@@ -1,6 +1,6 @@
 {
 	"name": "@sigrun/provider-opencode",
-	"version": "0.1.4",
+	"version": "0.2.0",
 	"description": "Sigrun provider plugin: OpenCode's paid Go tier (OpenAI-compatible /zen/go/v1) as a dynamic provider",
 	"type": "module",
 	"engines": {
