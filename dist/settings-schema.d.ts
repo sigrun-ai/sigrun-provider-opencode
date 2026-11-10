@@ -8,7 +8,7 @@
  * THE POSTURE CHANGE. The deleted `resolveOpencodeBaseUrl` THREW on a
  * malformed `baseUrl`, quarantining the whole plugin on a typo. Core's
  * checked read now repairs the value to its default (a logged repair plus one
- * admin notice), so the plugin boots on {@link OPENCODE_BASE_URL} instead. The
+ * boot-time warning), so the plugin boots on {@link OPENCODE_BASE_URL} instead. The
  * form refuses a malformed value at save (`format: "uri"`), so only a
  * hand-edited file can reach the repair path.
  *
