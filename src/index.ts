@@ -94,6 +94,9 @@ export type HealthStatus = "ok" | "degraded";
  */
 export interface ProviderPluginResult {
 	readonly name: string;
+	/** Display title (core 0.15.0's `SigrunExtensionResult.title`): trimmed
+	 * to 1..60 characters by the loader; never changes the slug. */
+	readonly title: "OpenCode";
 	readonly providers: readonly {
 		readonly provider: Provider;
 		readonly readiness?: () => ProviderReadiness;
@@ -340,6 +343,7 @@ export default async function sigrunOpencode(
 	const plugin = createOpencodePlugin(settings.baseUrl);
 	return {
 		name: "provider-opencode",
+		title: "OpenCode",
 		providers: [{ provider: plugin.provider, readiness: plugin.readiness }],
 		health: plugin.health,
 	};

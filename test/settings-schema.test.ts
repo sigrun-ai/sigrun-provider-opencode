@@ -39,6 +39,13 @@ describe("opencode settings schema", () => {
 		assertDrawable(OPENCODE_SETTINGS_SCHEMA);
 	});
 
+	it("factory declares its title", async () => {
+		const { result } = await declared();
+		expect(result.title).toBe("OpenCode");
+		// The identity is unchanged: the display title never becomes the slug.
+		expect(result.name).toBe("provider-opencode");
+	});
+
 	it("defaults match the old parser", async () => {
 		// The deleted resolver returned OPENCODE_BASE_URL for an absent key and
 		// for a document with no usable one. The schema states that same
