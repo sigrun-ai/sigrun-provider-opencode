@@ -247,6 +247,7 @@ export default async function sigrunOpencode(host) {
     const plugin = createOpencodePlugin(settings.baseUrl);
     return {
         name: "provider-opencode",
+        title: "OpenCode",
         providers: [{ provider: plugin.provider, readiness: plugin.readiness }],
         health: plugin.health,
     };
